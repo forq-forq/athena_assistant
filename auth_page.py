@@ -1,6 +1,6 @@
 import streamlit as st
 import re
-from auth import register_user, login_user, get_user_role
+from auth import register_user, login_user
 
 
 def authentication_ui():
@@ -23,7 +23,7 @@ def authentication_ui():
             if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
                 st.error("❌ Invalid email format")
             elif not email.lower().endswith(f"@{allowed_domain}"):
-                st.error(f"❌ Registration is available only for email addresses @{allowed_domain}")
+                st.error(f"❌ Registration is only allowed for @{allowed_domain} domain")
             elif len(password) < 6:
                 st.error("❌ Password must contain at least 6 characters")
             else:
@@ -37,17 +37,16 @@ def authentication_ui():
                     message = (
                         data.get("error", {}).get("message") or
                         data.get("msg") or
-                        f"Error's code: {res.status_code}"
+                        f"Error code: {res.status_code}"
                     )
                     if "User already registered" in str(message):
-                        st.error("❌ User with such email already exists")
+                        st.error("❌ A user with this email already exists")
                     else:
                         st.error(f"❌ Registration error: {message}")
                 else:
-                    st.success("✅ Registration has been done successfully. Login to account.")
+                    st.success("✅ Registration successful. Please sign in.")
                     st.session_state["force_switch_to_login"] = True
                     st.rerun()
-
 
     else:
         email = st.text_input("Email", key="log_email")
@@ -58,9 +57,11 @@ def authentication_ui():
             if "access_token" in response:
                 st.session_state["user"] = response.get("user", {})
                 st.session_state["token"] = response["access_token"]
-                role = get_user_role(st.session_state["user"]["id"])
-                st.session_state["role"] = role or "user"
-                st.success("✅ Sign in has been done successfully.!")
+
+                user_email = st.session_state["user"].get("email", "")
+                st.session_state["role"] = "admin" if user_email == "admin@athena.com" else "user"
+
+                st.success("✅ Sign in successful!")
                 st.rerun()
             elif "error" in response:
                 st.error(f"❌ Sign in error: {response['error']['message']}")

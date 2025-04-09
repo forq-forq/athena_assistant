@@ -9,6 +9,8 @@ load_dotenv()
 if "user" not in st.session_state:
     authentication_ui()
     st.stop()
+
+
 else:
     role = st.session_state.get("role", "user")
 
